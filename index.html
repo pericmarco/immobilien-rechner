@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Immobilien-Rechner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f6f8;
+    --card: #ffffff;
+    --ink: #0f172a;
+    --ink-soft: #475569;
+    --ink-mute: #94a3b8;
+    --line: #e2e8f0;
+    --line-soft: #eef1f5;
+    --accent: #1e293b;
+    --good: #15803d;
+    --good-bg: #ecfdf5;
+    --warn: #b45309;
+    --warn-bg: #fef3c7;
+    --bad: #b91c1c;
+    --bad-bg: #fef2f2;
+    --shadow: 0 1px 2px rgba(15,23,42,0.04), 0 4px 12px rgba(15,23,42,0.04);
+    --radius: 14px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  .wrap { max-width: 1200px; margin: 0 auto; padding: 32px 20px 80px; }
+  header { margin-bottom: 28px; }
+  header h1 {
+    font-size: 28px; font-weight: 700; letter-spacing: -0.02em;
+    margin: 0 0 6px;
+  }
+  header p { color: var(--ink-soft); margin: 0; font-size: 15px; }
+
+  .grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+    gap: 20px;
+  }
+  @media (max-width: 920px) {
+    .grid { grid-template-columns: 1fr; }
+    header h1 { font-size: 24px; }
+  }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 22px;
+    box-shadow: var(--shadow);
+  }
+  .card h2 {
+    font-size: 11px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--ink-mute); margin: 0 0 18px;
+  }
+
+  /* Toggles */
+  .toggles { display: flex; flex-direction: column; gap: 14px; margin-bottom: 22px; }
+  .toggle-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 14px; background: var(--line-soft); border-radius: 10px;
+  }
+  .toggle-row label { font-size: 14px; font-weight: 500; color: var(--ink); }
+  .seg {
+    display: inline-flex; background: #fff; border: 1px solid var(--line);
+    border-radius: 8px; padding: 3px; gap: 2px;
+  }
+  .seg button {
+    border: none; background: transparent; padding: 6px 14px;
+    font-family: inherit; font-size: 13px; font-weight: 500;
+    color: var(--ink-soft); cursor: pointer; border-radius: 6px;
+    transition: all .15s ease;
+  }
+  .seg button.active { background: var(--accent); color: white; }
+
+  /* Inputs */
+  .input-group { margin-bottom: 16px; }
+  .input-group label {
+    display: flex; justify-content: space-between; align-items: baseline;
+    font-size: 13px; color: var(--ink-soft); margin-bottom: 6px; font-weight: 500;
+  }
+  .input-group label .hint { color: var(--ink-mute); font-size: 12px; font-weight: 400; }
+  .input-wrap { position: relative; }
+  .input-wrap input[type=number] {
+    width: 100%;
+    font-family: 'Inter', sans-serif;
+    font-size: 15px; font-weight: 500;
+    padding: 10px 14px 10px 14px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: #fff;
+    color: var(--ink);
+    transition: border-color .15s ease, box-shadow .15s ease;
+    -moz-appearance: textfield;
+  }
+  .input-wrap input[type=number]::-webkit-outer-spin-button,
+  .input-wrap input[type=number]::-webkit-inner-spin-button {
+    -webkit-appearance: none; margin: 0;
+  }
+  .input-wrap input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(30,41,59,0.08);
+  }
+  .input-wrap .suffix {
+    position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+    color: var(--ink-mute); font-size: 13px; pointer-events: none;
+  }
+  .input-wrap input { padding-right: 36px; }
+
+  /* Slider */
+  .slider-group { margin-bottom: 18px; }
+  .slider-group .label-row {
+    display: flex; justify-content: space-between; align-items: baseline;
+    font-size: 13px; color: var(--ink-soft); margin-bottom: 8px; font-weight: 500;
+  }
+  .slider-group .value {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 600; color: var(--ink); font-size: 14px;
+  }
+  input[type=range] {
+    -webkit-appearance: none; appearance: none;
+    width: 100%; height: 6px; background: var(--line);
+    border-radius: 3px; outline: none; padding: 0;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    width: 20px; height: 20px; background: var(--accent);
+    border-radius: 50%; cursor: pointer;
+    border: 2px solid white;
+    box-shadow: 0 1px 3px rgba(15,23,42,0.2);
+  }
+  input[type=range]::-moz-range-thumb {
+    width: 20px; height: 20px; background: var(--accent);
+    border-radius: 50%; cursor: pointer;
+    border: 2px solid white;
+    box-shadow: 0 1px 3px rgba(15,23,42,0.2);
+  }
+
+  .section-divider {
+    border: none; border-top: 1px solid var(--line-soft);
+    margin: 22px 0 18px;
+  }
+  .section-label {
+    font-size: 11px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--ink-mute); margin: 0 0 14px;
+  }
+
+  /* Hero result */
+  .hero {
+    background: var(--accent);
+    color: white;
+    padding: 28px 24px;
+    border-radius: var(--radius);
+    margin-bottom: 20px;
+  }
+  .hero .label {
+    font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em;
+    opacity: 0.7; font-weight: 600; margin-bottom: 8px;
+  }
+  .hero .value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 44px; font-weight: 700; letter-spacing: -0.02em;
+    line-height: 1;
+  }
+  .hero .sub { font-size: 13px; opacity: 0.7; margin-top: 8px; }
+
+  /* Result grid */
+  .results {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 18px;
+  }
+  .stat {
+    padding: 14px 16px;
+    background: var(--line-soft);
+    border-radius: 10px;
+  }
+  .stat .label {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--ink-mute); font-weight: 600; margin-bottom: 4px;
+  }
+  .stat .value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 18px; font-weight: 600; color: var(--ink);
+  }
+  .stat .sub { font-size: 11px; color: var(--ink-mute); margin-top: 2px; }
+  .stat.good { background: var(--good-bg); }
+  .stat.good .value { color: var(--good); }
+  .stat.warn { background: var(--warn-bg); }
+  .stat.warn .value { color: var(--warn); }
+  .stat.bad  { background: var(--bad-bg); }
+  .stat.bad  .value { color: var(--bad); }
+
+  /* Chart */
+  .chart-wrap { margin-top: 6px; }
+  .chart-title {
+    font-size: 11px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--ink-mute); margin: 18px 0 10px;
+  }
+  svg { display: block; width: 100%; height: auto; }
+  .axis-text { fill: var(--ink-mute); font-size: 11px; font-family: 'Inter', sans-serif; }
+  .chart-line { fill: none; stroke: var(--accent); stroke-width: 2.5; }
+  .chart-area { fill: var(--accent); opacity: 0.08; }
+  .grid-line { stroke: var(--line); stroke-width: 1; stroke-dasharray: 3 3; }
+
+  .hidden { display: none !important; }
+
+  footer {
+    margin-top: 36px;
+    padding-top: 20px;
+    border-top: 1px solid var(--line);
+    color: var(--ink-mute);
+    font-size: 12px;
+    text-align: center;
+  }
+  footer a { color: var(--ink-soft); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Immobilien-Rechner</h1>
+    <p>Kauf, Sanierung, Vermietung — Monatsrate, Cashflow und Steuer auf einen Blick.</p>
+  </header>
+
+  <div class="grid">
+
+    <!-- INPUTS -->
+    <div class="card">
+      <h2>Eingaben</h2>
+
+      <div class="toggles">
+        <div class="toggle-row">
+          <label>Nutzung</label>
+          <div class="seg" id="seg-use">
+            <button data-val="rent" class="active">Vermietung</button>
+            <button data-val="own">Eigennutzung</button>
+          </div>
+        </div>
+        <div class="toggle-row">
+          <label>Sanierung</label>
+          <div class="seg" id="seg-reno">
+            <button data-val="on" class="active">An</button>
+            <button data-val="off">Aus</button>
+          </div>
+        </div>
+      </div>
+
+      <p class="section-label">Objekt &amp; Finanzierung</p>
+
+      <div class="input-group">
+        <label>Kaufpreis</label>
+        <div class="input-wrap">
+          <input type="number" id="kaufpreis" value="168000" min="0" step="1000">
+          <span class="suffix">€</span>
+        </div>
+      </div>
+
+      <div class="input-group">
+        <label>Eigenkapital <span class="hint">in den Deal</span></label>
+        <div class="input-wrap">
+          <input type="number" id="ek" value="20000" min="0" step="1000">
+          <span class="suffix">€</span>
+        </div>
+      </div>
+
+      <div class="input-group">
+        <label>Jahresbrutto <span class="hint">ledig, Stkl. I</span></label>
+        <div class="input-wrap">
+          <input type="number" id="brutto" value="80000" min="0" step="1000">
+          <span class="suffix">€</span>
+        </div>
+      </div>
+
+      <div class="slider-group">
+        <div class="label-row">
+          <span>Kaufnebenkosten</span>
+          <span class="value"><span id="nk-val">8.5</span> %</span>
+        </div>
+        <input type="range" id="nk" min="5" max="15" step="0.1" value="8.5">
+      </div>
+
+      <div class="slider-group">
+        <div class="label-row">
+          <span>Sollzins</span>
+          <span class="value"><span id="zins-val">3.9</span> %</span>
+        </div>
+        <input type="range" id="zins" min="1" max="8" step="0.05" value="3.9">
+      </div>
+
+      <div class="slider-group">
+        <div class="label-row">
+          <span>Anfängliche Tilgung</span>
+          <span class="value"><span id="tilg-val">2.0</span> %</span>
+        </div>
+        <input type="range" id="tilg" min="0.5" max="10" step="0.1" value="2.0">
+      </div>
+
+      <div id="reno-section">
+        <hr class="section-divider">
+        <p class="section-label">Sanierung</p>
+
+        <div class="input-group">
+          <label>Materialkosten <span class="hint">Eigenleistung ist gratis</span></label>
+          <div class="input-wrap">
+            <input type="number" id="material" value="35000" min="0" step="500">
+            <span class="suffix">€</span>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label>Wert nach Sanierung</label>
+          <div class="input-wrap">
+            <input type="number" id="wert" value="245000" min="0" step="1000">
+            <span class="suffix">€</span>
+          </div>
+        </div>
+      </div>
+
+      <div id="rent-section">
+        <hr class="section-divider">
+        <p class="section-label">Vermietung</p>
+
+        <div class="input-group">
+          <label>Kaltmiete <span class="hint">pro Monat</span></label>
+          <div class="input-wrap">
+            <input type="number" id="miete" value="875" min="0" step="10">
+            <span class="suffix">€</span>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label>Nicht umlagefähige Kosten <span class="hint">Verwaltung, Rücklage</span></label>
+          <div class="input-wrap">
+            <input type="number" id="kosten" value="60" min="0" step="5">
+            <span class="suffix">€/M</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RESULTS -->
+    <div>
+      <div class="hero">
+        <div class="label">Monatsrate</div>
+        <div class="value" id="r-rate">— €</div>
+        <div class="sub" id="r-rate-sub">Zins + Tilgung, gleichbleibende Annuität</div>
+      </div>
+
+      <div class="card">
+        <h2>Übersicht</h2>
+        <div class="results">
+          <div class="stat">
+            <div class="label">Investiert gesamt</div>
+            <div class="value" id="r-invest">—</div>
+            <div class="sub" id="r-invest-sub">Kaufpreis + NK + Material</div>
+          </div>
+          <div class="stat" id="r-quote-stat">
+            <div class="label">Rate vom Netto</div>
+            <div class="value" id="r-quote">—</div>
+            <div class="sub" id="r-quote-sub">Tragbarkeit</div>
+          </div>
+          <div class="stat" id="r-eq-stat">
+            <div class="label">Geschaffenes EK</div>
+            <div class="value" id="r-eq">—</div>
+            <div class="sub">Wert n. San. − Investiert</div>
+          </div>
+          <div class="stat">
+            <div class="label">Darlehensbetrag</div>
+            <div class="value" id="r-loan">—</div>
+            <div class="sub" id="r-loan-sub">Kaufpreis + NK − EK</div>
+          </div>
+          <div class="stat">
+            <div class="label">Restschuld n. 10 J</div>
+            <div class="value" id="r-rest">—</div>
+            <div class="sub" id="r-rest-sub">Ende der Zinsbindung</div>
+          </div>
+          <div class="stat">
+            <div class="label">Tilgungsdauer</div>
+            <div class="value" id="r-laufzeit">—</div>
+            <div class="sub">Bei konstantem Zins</div>
+          </div>
+        </div>
+
+        <div id="rent-results">
+          <p class="section-label" style="margin-top:10px">Cashflow &amp; Rendite</p>
+          <div class="results">
+            <div class="stat">
+              <div class="label">Bruttorendite</div>
+              <div class="value" id="r-rendite">—</div>
+              <div class="sub">Jahresmiete / Kaufpreis</div>
+            </div>
+            <div class="stat" id="r-cf-stat">
+              <div class="label">Cashflow / Monat</div>
+              <div class="value" id="r-cf">—</div>
+              <div class="sub">Vor Steuer</div>
+            </div>
+            <div class="stat" id="r-cfn-stat">
+              <div class="label">Cashflow nach Steuer</div>
+              <div class="value" id="r-cfn">—</div>
+              <div class="sub" id="r-cfn-sub">inkl. Steuerschild</div>
+            </div>
+            <div class="stat">
+              <div class="label">Steuereffekt / Jahr</div>
+              <div class="value" id="r-tax">—</div>
+              <div class="sub" id="r-tax-sub">+ = Rückerstattung</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="chart-wrap">
+          <p class="chart-title">Restschuld über die Jahre</p>
+          <svg id="chart" viewBox="0 0 600 220" preserveAspectRatio="none"></svg>
+        </div>
+      </div>
+
+      <footer>
+        Planungsannahmen, keine Steuer- oder Finanzberatung. Stand 2026.
+      </footer>
+    </div>
+
+  </div>
+</div>
+
+<script>
+(() => {
+  // ---------- Helpers ----------
+  const $ = id => document.getElementById(id);
+  const fmtEUR = n => {
+    if (!isFinite(n)) return '—';
+    const sign = n < 0 ? '−' : '';
+    const abs = Math.abs(Math.round(n));
+    return sign + abs.toLocaleString('de-DE') + ' €';
+  };
+  const fmtPct = n => isFinite(n) ? n.toFixed(2).replace('.', ',') + ' %' : '—';
+
+  // ---------- State ----------
+  const state = {
+    use: 'rent',     // rent | own
+    reno: 'on'       // on | off
+  };
+
+  // ---------- Toggles ----------
+  function initSeg(id, key) {
+    const wrap = $(id);
+    wrap.querySelectorAll('button').forEach(b => {
+      b.addEventListener('click', () => {
+        wrap.querySelectorAll('button').forEach(x => x.classList.remove('active'));
+        b.classList.add('active');
+        state[key] = b.dataset.val;
+        applyVisibility();
+        recompute();
+      });
+    });
+  }
+  initSeg('seg-use', 'use');
+  initSeg('seg-reno', 'reno');
+
+  function applyVisibility() {
+    $('reno-section').classList.toggle('hidden', state.reno !== 'on');
+    $('rent-section').classList.toggle('hidden', state.use !== 'rent');
+    $('rent-results').classList.toggle('hidden', state.use !== 'rent');
+    $('r-eq-stat').classList.toggle('hidden', state.reno !== 'on');
+  }
+
+  // ---------- Inputs ----------
+  const ids = ['kaufpreis','ek','brutto','material','wert','miete','kosten','nk','zins','tilg'];
+  ids.forEach(id => $(id).addEventListener('input', () => {
+    if (id === 'nk')   $('nk-val').textContent   = parseFloat($('nk').value).toFixed(1).replace('.', ',');
+    if (id === 'zins') $('zins-val').textContent = parseFloat($('zins').value).toFixed(2).replace('.', ',');
+    if (id === 'tilg') $('tilg-val').textContent = parseFloat($('tilg').value).toFixed(1).replace('.', ',');
+    recompute();
+  }));
+
+  // ---------- Tax helpers (vereinfacht, ledig Stkl. I) ----------
+  // Linearer Netto-Faktor anhand Brutto (grob, 2026)
+  function nettoFactor(brutto) {
+    const pts = [
+      [20000, 0.71],
+      [40000, 0.67],
+      [60000, 0.62],
+      [80000, 0.59],
+      [100000, 0.57],
+      [150000, 0.54],
+      [250000, 0.51]
+    ];
+    if (brutto <= pts[0][0]) return pts[0][1];
+    if (brutto >= pts[pts.length-1][0]) return pts[pts.length-1][1];
+    for (let i = 0; i < pts.length - 1; i++) {
+      const [x1, y1] = pts[i], [x2, y2] = pts[i+1];
+      if (brutto >= x1 && brutto <= x2) {
+        const t = (brutto - x1) / (x2 - x1);
+        return y1 + (y2 - y1) * t;
+      }
+    }
+    return 0.6;
+  }
+  // Grenzsteuersatz inkl. Soli (ab ~62.810€ Spitzensteuersatz 42 %)
+  function marginalRate(brutto) {
+    if (brutto < 12000)  return 0;
+    if (brutto < 17000)  return 0.14;
+    if (brutto < 30000)  return 0.25;
+    if (brutto < 50000)  return 0.32;
+    if (brutto < 62800)  return 0.38;
+    if (brutto < 277826) return 0.42;
+    return 0.45;
+  }
+
+  // ---------- Annuität ----------
+  function annuitaet(loan, zinsP, tilgP) {
+    return loan * (zinsP + tilgP) / 100;
+  }
+  // Restschuld nach n Jahren bei konstantem Zins
+  function restschuld(loan, zinsP, annualPay, years) {
+    const r = zinsP / 100;
+    let rest = loan;
+    for (let y = 0; y < years; y++) {
+      const interest = rest * r;
+      const tilgung = annualPay - interest;
+      rest -= tilgung;
+      if (rest <= 0) return 0;
+    }
+    return rest;
+  }
+  function laufzeitJahre(loan, zinsP, annualPay) {
+    const r = zinsP / 100;
+    let rest = loan;
+    let years = 0;
+    while (rest > 0 && years < 80) {
+      const interest = rest * r;
+      const tilgung = annualPay - interest;
+      if (tilgung <= 0) return Infinity;
+      rest -= tilgung;
+      years++;
+    }
+    return years;
+  }
+
+  // ---------- Recompute ----------
+  function recompute() {
+    const kaufpreis = +$('kaufpreis').value || 0;
+    const ek        = +$('ek').value || 0;
+    const brutto    = +$('brutto').value || 0;
+    const material  = state.reno === 'on' ? (+$('material').value || 0) : 0;
+    const wertNach  = state.reno === 'on' ? (+$('wert').value || 0) : 0;
+    const miete     = state.use === 'rent' ? (+$('miete').value || 0) : 0;
+    const kostenM   = state.use === 'rent' ? (+$('kosten').value || 0) : 0;
+    const nkP       = +$('nk').value || 0;
+    const zinsP     = +$('zins').value || 0;
+    const tilgP     = +$('tilg').value || 0;
+
+    const nk        = kaufpreis * nkP / 100;
+    const invest    = kaufpreis + nk + material;
+    const loan      = Math.max(0, kaufpreis + nk + material - ek);
+    const annual    = annuitaet(loan, zinsP, tilgP);
+    const monthly   = annual / 12;
+
+    const rest10    = restschuld(loan, zinsP, annual, 10);
+    const laufzeit  = laufzeitJahre(loan, zinsP, annual);
+
+    // Tax (vereinfacht, Privatperson, anschaffungsnah)
+    const afaBase    = kaufpreis * 0.75 + material;
+    const afa        = afaBase * 0.02;
+    const interestY  = loan * zinsP / 100; // Jahr 1
+    const jahresmiete = miete * 12;
+    const jahreskosten = kostenM * 12;
+    const taxable    = jahresmiete - interestY - afa - jahreskosten;
+    const margRate   = marginalRate(brutto);
+    const taxEffectY = taxable * margRate; // negativ => Steuerschild => Rückzahlung
+
+    const cfM        = (jahresmiete - jahreskosten) / 12 - monthly;
+    const cfMnachSt  = cfM - taxEffectY / 12;
+
+    // Netto-Einkommen
+    const nettoM     = (brutto * nettoFactor(brutto)) / 12;
+    const quote      = nettoM > 0 ? (monthly / nettoM * 100) : 0;
+    const eqCreated  = wertNach - invest;
+    const rendite    = kaufpreis > 0 ? (jahresmiete / kaufpreis * 100) : 0;
+
+    // ---------- Render ----------
+    $('r-rate').textContent = fmtEUR(monthly);
+    $('r-rate-sub').textContent = `Zins ${zinsP.toFixed(2).replace('.', ',')} % + Tilg. ${tilgP.toFixed(1).replace('.', ',')} % auf ${fmtEUR(loan)}`;
+
+    $('r-invest').textContent = fmtEUR(invest);
+    $('r-invest-sub').textContent = `KP ${fmtEUR(kaufpreis)} + NK ${fmtEUR(nk)}${material ? ' + Mat. ' + fmtEUR(material) : ''}`;
+
+    $('r-loan').textContent = fmtEUR(loan);
+    $('r-loan-sub').textContent = `EK-Quote ${invest > 0 ? (ek/invest*100).toFixed(1).replace('.', ',') : '0'} %`;
+
+    $('r-quote').textContent = fmtPct(quote);
+    $('r-quote-sub').textContent = `Netto ca. ${fmtEUR(nettoM)}/Mon`;
+    setStat('r-quote-stat', quote < 30 ? 'good' : quote < 40 ? 'warn' : 'bad');
+
+    $('r-eq').textContent = state.reno === 'on' ? fmtEUR(eqCreated) : '—';
+
+    $('r-rest').textContent = fmtEUR(rest10);
+    $('r-rest-sub').textContent = `${loan > 0 ? (rest10/loan*100).toFixed(1).replace('.', ',') : '0'} % des Darlehens`;
+
+    $('r-laufzeit').textContent = isFinite(laufzeit) ? laufzeit + ' Jahre' : '∞';
+
+    $('r-rendite').textContent = fmtPct(rendite);
+
+    $('r-cf').textContent = fmtEUR(cfM);
+    setStat('r-cf-stat', cfM >= 0 ? 'good' : 'warn');
+
+    $('r-cfn').textContent = fmtEUR(cfMnachSt);
+    setStat('r-cfn-stat', cfMnachSt >= 0 ? 'good' : 'warn');
+    $('r-cfn-sub').textContent = `Grenzsteuersatz ${(margRate*100).toFixed(0)} %`;
+
+    $('r-tax').textContent = fmtEUR(-taxEffectY);
+    $('r-tax-sub').textContent = taxable < 0
+      ? `V+V-Verlust ${fmtEUR(taxable)} → Schild`
+      : `V+V-Gewinn ${fmtEUR(taxable)} → Steuer`;
+
+    drawChart(loan, zinsP, annual);
+  }
+
+  function setStat(id, cls) {
+    const el = $(id);
+    el.classList.remove('good', 'warn', 'bad');
+    if (cls) el.classList.add(cls);
+  }
+
+  // ---------- Chart ----------
+  function drawChart(loan, zinsP, annual) {
+    const svg = $('chart');
+    if (loan <= 0 || annual <= 0) { svg.innerHTML = ''; return; }
+    const years = Math.min(40, Math.max(15, Math.ceil(laufzeitJahre(loan, zinsP, annual)) + 2));
+    const data = [loan];
+    const r = zinsP / 100;
+    let rest = loan;
+    for (let y = 1; y <= years; y++) {
+      const interest = rest * r;
+      const tilgung = annual - interest;
+      rest = Math.max(0, rest - tilgung);
+      data.push(rest);
+    }
+
+    const W = 600, H = 220;
+    const padL = 56, padR = 16, padT = 12, padB = 28;
+    const cw = W - padL - padR, ch = H - padT - padB;
+    const maxY = loan;
+    const x = i => padL + (i / years) * cw;
+    const y = v => padT + (1 - v / maxY) * ch;
+
+    // Build path
+    let line = `M ${x(0)} ${y(data[0])}`;
+    for (let i = 1; i < data.length; i++) line += ` L ${x(i)} ${y(data[i])}`;
+    const area = line + ` L ${x(years)} ${padT + ch} L ${x(0)} ${padT + ch} Z`;
+
+    // Y-axis ticks
+    const ticks = 4;
+    let gridLines = '';
+    let yLabels = '';
+    for (let t = 0; t <= ticks; t++) {
+      const v = (maxY / ticks) * t;
+      const yy = y(v);
+      gridLines += `<line class="grid-line" x1="${padL}" y1="${yy}" x2="${W-padR}" y2="${yy}"/>`;
+      const label = (v >= 1000) ? Math.round(v/1000) + 'k €' : Math.round(v) + ' €';
+      yLabels += `<text class="axis-text" x="${padL - 8}" y="${yy + 4}" text-anchor="end">${label}</text>`;
+    }
+
+    // X-axis labels (every 5 years)
+    let xLabels = '';
+    for (let yr = 0; yr <= years; yr += 5) {
+      xLabels += `<text class="axis-text" x="${x(yr)}" y="${H - padB + 16}" text-anchor="middle">${yr}</text>`;
+    }
+    // 10-year marker
+    if (years >= 10) {
+      xLabels += `<line x1="${x(10)}" y1="${padT}" x2="${x(10)}" y2="${padT + ch}" stroke="#b91c1c" stroke-width="1" stroke-dasharray="2 3" opacity="0.4"/>`;
+      xLabels += `<text class="axis-text" x="${x(10)}" y="${padT - 2}" text-anchor="middle" fill="#b91c1c">10 J</text>`;
+    }
+
+    svg.innerHTML =
+      gridLines +
+      `<path class="chart-area" d="${area}"/>` +
+      `<path class="chart-line" d="${line}"/>` +
+      yLabels + xLabels;
+  }
+
+  // initial
+  applyVisibility();
+  recompute();
+})();
+</script>
+</body>
+</html>
